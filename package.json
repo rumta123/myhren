@@ -1,0 +1,17 @@
+{
+  "name": "nest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start-vue": "cd client && npm run serve",
+    "start-nest": "cd server && npm run start",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm run start-vue\" \"npm run start-nest\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.2"
+  }
+}
