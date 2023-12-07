@@ -8,7 +8,7 @@
                 <ul>
                     <li v-for="(tour, index) in tours" :key="index" @click="showTourDates(index)">
                         <div v-if="!tour.isEditing">
-                           {{ tour.name }}
+                            {{ tour.name }}
                             <button style="margin-left: 10px;" @click.prevent="editTour(index)">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -27,25 +27,22 @@
                 <button @click="addNewTour">Добавить тур</button>
             </div>
             <!-- Отображение даты выбранного тура -->
-            <div class="tour-dates" v-if="selectedTour !== null  ">
+            <div class="tour-dates" v-if="selectedTour !== null">
                 <h2>Выбранный тур: {{ tours[selectedTour].name }}</h2>
                 <p>Даты тура:</p>
                 <ul>
                     <li v-for="(date, dateIndex) in tours[selectedTour].dates" :key="dateIndex">
-
                         <div v-if="!date.isEditing">
                             <span class="padding_palace" @click="generateMessage(date)">
-
                                 {{ date.tour_date }} - Количество мест: {{ date.totalSeats }} - Количество свободных мест:
-
                             </span>
-                            <button @click=" editTourDate(dateIndex)">Редактировать дату</button>
+                            <button @click="editTourDate(dateIndex)">Редактировать дату</button>
                             <button @click="deleteDate(dateIndex)">Удалить дату</button>
                         </div>
                         <div v-else class="editData">
-                            <Datepicker v-model="editedDate.date" locale="ru" :placeholder="date.date"
-                                style="width: 200px;" />
-                            <input type="number" v-model="editedDate.freeSpots" placeholder="Свободные места">
+                            <Datepicker v-model="date.start" locale="ru" :placeholder="date.start" style="width: 200px;" />
+                            <Datepicker v-model="date.end" locale="ru" :placeholder="date.end" style="width: 200px;" />
+                            <input type="number" v-model="date.freeSpots" placeholder="Свободные места">
                             <button @click="saveEdit(dateIndex)">Сохранить</button>
                         </div>
                     </li>
@@ -119,7 +116,7 @@ export default {
         Datepicker,
         // TableBiker,
         ListBike,
-     
+
     },
     data() {
         return {
@@ -129,10 +126,10 @@ export default {
             editedTourName: '',
             newDate: ref(''),
             selectedTourMessage: '',
-          
-            editedDate: {
 
-                date: new Date().toLocaleDateString('ru-RU'),
+            editedDate: {
+                tour_date: new Date().toLocaleDateString('ru-RU'),
+                tour_date_end: new Date().toLocaleDateString('ru-RU'),
                 freeSpots: 0,
             },
             tours: [],
@@ -166,7 +163,7 @@ export default {
             if (this.selectedTour === index) {
                 this.selectedTour = null;
                 this.showTable = false;
-                this.selectedTourMessage=''
+                this.selectedTourMessage = ''
             } else {
                 try {
                     // Запрос на получение информации о туре
@@ -193,8 +190,8 @@ export default {
                     this.selectedTour = index;
                     this.editIndex = null;
                     // Добавьте эту строку, чтобы скрыть таблицу при выборе тура
-                this.showTable = false;
-                this.selectedTourMessage=''
+                    this.showTable = false;
+                    this.selectedTourMessage = ''
                 } catch (error) {
                     console.error('Ошибка при загрузке тура и его дат:', error);
                 }
@@ -297,6 +294,7 @@ export default {
         editTourDate(dateIndex) {
             this.startEditing(dateIndex);
         },
+
         editTour(index) {
             this.editedTourName = this.tours[index].name;
             this.tours[index].isEditing = true;
@@ -339,48 +337,35 @@ export default {
                 // Handle the case where selectedDate or selectedDate.tour_date is undefined
             }
         },
-
         saveEdit(dateIndex) {
-            const selectedDate = this.tours[this.selectedTour].dates[dateIndex];
-            const day = this.editedDate.date.getDate().toString().padStart(2, '0');
-            const month = (this.editedDate.date.getMonth() + 1).toString().padStart(2, '0');
-            const year = this.editedDate.date.getFullYear();
-            const formattedDate = `${day}.${month}.${year}`;
+        const selectedDate = this.tours[this.selectedTour].dates[dateIndex];
+        const formattedStartDate = this.dateToString(this.editedDate.start);
+        const formattedEndDate = this.dateToString(this.editedDate.end);
 
-            // Обновление локальных данных
-            selectedDate.date = formattedDate;
-            selectedDate.freeSpots = this.editedDate.freeSpots;
-            selectedDate.isEditing = false;
+        // Update local data
+        selectedDate.tour_date = `${formattedStartDate} - ${formattedEndDate}`;
+        selectedDate.freeSpots = this.editedDate.freeSpots;
+        selectedDate.isEditing = false;
 
-            // Формирование объекта данных для отправки на сервер
-            const requestData = {
-                tour_date: formattedDate,
-                totalSeats: this.editedDate.freeSpots,  // Или может быть totalSeats, в зависимости от вашей логики
-            };
+        // Prepare data for the PUT request
+        const requestData = {
+            tour_date: formattedStartDate,
+            tour_date_end: formattedEndDate,
+            totalSeats: this.editedDate.freeSpots,
+        };
 
-            // Получение идентификатора даты тура
-            const dateId = this.tours[this.selectedTour].dates[dateIndex].date_id
-            console.log(dateId)
-            // Выполнение HTTP-запроса PUT
-            axios.put(`${this.apiUrl}/tour-dates/${dateId}`, requestData)
-                .then(response => {
-
-                    console.log('Date updated successfully:', response.data);
-                    this.tours[this.selectedTour].dates[dateIndex].tour_date = response.data.tour_date;
-                    this.tours[this.selectedTour].dates[dateIndex].totalSeats = response.data.totalSeats
-                    // this.freeSpots = response.data.totalSeats;
-
-                    console.log('Updated selectedDate:', selectedDate);
-                    // Обработка успешного обновления на сервере (если необходимо)
-                })
-                .catch(error => {
-                    console.error('Error updating date:', error);
-
-                    // В случае ошибки можно предпринять необходимые действия, например, откатить изменения
-                    // или предоставить сообщение об ошибке пользователю.
-                });
-        },
- 
+        // Make the PUT request
+        const dateId = selectedDate.date_id;
+        axios.put(`${this.apiUrl}/tour-dates/${dateId}`, requestData)
+            .then(response => {
+                console.log('Date updated successfully:', response.data);
+                selectedDate.tour_date = response.data.tour_date;
+                selectedDate.totalSeats = response.data.totalSeats;
+            })
+            .catch(error => {
+                console.error('Error updating date:', error);
+            });
+    },
 
         cancelEdit(index) {
             this.tours[index].isEditing = false;
@@ -453,17 +438,17 @@ export default {
         //     console.log('Вы кликнули по дате с индексом:', date.tour_date);
         // },
         generateMessage(date) {
-            if(!this.tours[this.selectedTour].name){
-                this.showTable = false; 
-                this.selectedTourMessage=''
+            if (!this.tours[this.selectedTour].name) {
+                this.showTable = false;
+                this.selectedTourMessage = ''
             }
-            else{
+            else {
 
                 this.selectedTourMessage = `Выбран тур ${this.tours[this.selectedTour].name} на дату ${date.tour_date} - список участников`;
-            // console.log(this.tours[this.selectedTour].dates[0].tour_date)
-            this.showTable = true;
+                // console.log(this.tours[this.selectedTour].dates[0].tour_date)
+                this.showTable = true;
             }
-            
+
         },
 
 

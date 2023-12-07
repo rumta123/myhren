@@ -5,6 +5,7 @@ import {
     Get,
     Param,
     Post,
+    Put,
     ParseIntPipe,
   } from '@nestjs/common';
   import { CreateUserDto } from './dto/create-user.dto';
@@ -25,10 +26,20 @@ import {
     findAll(): Promise<Users[]> {
       return this.usersService.findAll();
     }
-  
+    @Get(':id')
+  async getUserById(@Param('id') id: number) {
+    return this.usersService.getUserById(id);
+  }
+
     @Get(':id')
     findOne(@Param('id', ParseIntPipe) id: number): Promise<Users> {
       return this.usersService.findOne(id);
+    }
+
+
+    @Put(':id')
+    async updateTour(@Param('id') id: number, @Body() userData: Partial<Users>) {
+      return this.usersService.updateUser(id, userData);
     }
 
     @Get('fio/:fio')

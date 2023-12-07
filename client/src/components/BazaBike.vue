@@ -1,577 +1,522 @@
-<!-- пока вот -->
-
 <template>
-    <div id="app">
-      <form @submit.prevent="searchOrAdd">
-        <label for="search">Поиск или добавление по ФИО:</label>
-        <input type="text" v-model="searchText" id="search" @input="searchOrAdd">
-        <select v-if="matchingPeople.length > 0" v-model="selectedPerson">
-          <option v-for="person in matchingPeople" :key="person.fio" :value="person">
-            {{ person.fio }}
-          </option>
-        </select>
-      </form>
-  
-      <div>
-        <h2>Результаты поиска:</h2>
+  <div class="all">
+
+
+    <div v-if="isModalVisible" class="modal-overlay">
+      <div class="modal">
+        <!-- Крестик для закрытия модального окна -->
+        <span class="modal-close" @click="hideModal">
+          <i class="fas fa-times"></i>
+        </span>
         <div>
-          <template v-if="searchResults.length > 0">
-  
-            <form @submit.prevent="addPerson" v-if="searchResults.length > 0 && selectedPerson">
-  
-              <label for="newFio">Добавить нового человека:</label>
-              <input type="text" v-model="selectedPerson.fio" id="newFio">
-  
-  
-  
-              <label for="newbirthDate">Дата рождения:</label>
-              <input v-model="selectedPerson.DateBirth" type="date" id="newbirthDate" />
-  
-              <label for="newPhone">Телефон:</label>
-              <input v-model="selectedPerson.phone" id="newPhone" />
-              <h2>Паспорт</h2>
-  
-              <label for="newSeriaPassport">Cерия:</label>
-              <input v-model="selectedPerson.passportSeries" id="newSeriaPassport" />
-  
-              <label for="newNumberPassport">Номер:</label>
-              <input v-model="selectedPerson.passportNumber" id="newNumberPassport" />
-  
-              <label for="newKemVydanPassport">Кем выдан:</label>
-              <input v-model="selectedPerson.passportKemVydan" id="newKemVydanPassport" />
-  
-              <label for="newDataPassport">Дата выдачи:</label>
-              <input v-model="selectedPerson.passportVydan" type="date" id="newDataPassport" />
-  
-              <label for="newKodPassport">Код подразделения:</label>
-              <input v-model="selectedPerson.passportKodP" id="newKodPassport" />
-  
-              <h2>Водительское удостоверение</h2>
-  
-              <label for="newNumberPrava">Номер:</label>
-              <input v-model="selectedPerson.driverLicense" id="newNumberPrava" />
-  
-              <label for="newDataPrava">Дата выдачи:</label>
-              <input v-model="selectedPerson.driverLicenseDate" type="date" id="newDataPrava" />
-  
-  
-              <h2>Тур </h2>
-              <label for="tourSelect">Выберите тур:</label>
-              <select id="tourSelect" @change="fetchTours">
-                <option v-for="(tour, index) in tours" :key="index" :value="tour.id">{{ tour.tour_name }}</option>
-              </select>
-  
-              <select v-model="selectedTourDate" id="dataSelect" v-if="tourDates.length > 0">
-                <option v-for="(tour_date, index) in tourDates" :key="index" :value="tour_date">{{ tour_date }}</option>
-              </select>
-  
-              <label for="newPrice">Цена:</label>
-              <input v-model="newPrice" type="number" id="newPrice" />
-              <label for="newDoplata">Доплата:</label>
-              <input v-model="newDoplata" type="number" id="newDoplata" />
-              <label for="newAllPrice">Общая сумма:</label>
-              <input v-model="newAllPrice" type="number" id="newAllSumma" />
-  
-              <label for="newAvance">Аванс:</label>
-              <input v-model="newAvance" type="number" id="newAvance" />
-  
-              <h2>Арендная техника</h2>
-              <select id="tourSelect" v-model="selectedMoto" v-if="motos" @change="updatePrice">
-                <option v-for="(moto, index) in motos" :key="index" :value="moto?.equipment_name">
-                  {{ moto?.equipment_name }} {{ moto?.price }}
-                </option>
-  
-              </select>
-  
-  
-              <label for="newDay">Количество дней:</label>
-              <input type="number" v-model="newDay" id="newDay" />
-  
-  
-              <label for="newRental_cost">К оплате:</label>
-              <input type="number" v-model="newRental_cost" id="newRental_cost" />
-  
-              <label for="newTotal_rental_cost">Общая сумма:</label>
-              <input type="number" v-model="newTotal_rental_cost" id="newTotal_rental_cost" />
-  
-              <h2>коментариии</h2>
-              <textarea name="" v-model="newDescription" id="" cols="100" rows="10"></textarea>
-              <br>
-              <button @click="addPerson(selectedPerson.id)" type="submit">Добавить</button>
-            </form>
-          </template>
-  
-          <!-- добавление нового пользователя -->
-          <template v-else>
-            <p>Ничего не найдено</p>
-            <form @submit.prevent="newaddPerson">
-  
-              <h2>Добавить нового клиента</h2>
-  
-              <label for="newFio">Введите ФИО:</label>
-              <input type="text" v-model="newFio" id="newFio">
-  
-  
-  
-              <label for="newbirthDate">Дата рождения:</label>
-              <input v-model="newDateBirth" type="date" id="newbirthDate" />
-  
-              <label for="newPhone">Телефон:</label>
-              <input v-model="newPhone" id="newPhone" />
-              <h2>Паспорт</h2>
-  
-              <label for="newSeriaPassport">Cерия:</label>
-              <input v-model="newSeriaPassport" id="newSeriaPassport" />
-  
-              <label for="newNumberPassport">Номер:</label>
-              <input v-model="newNumberPassport" id="newNumberPassport" />
-  
-              <label for="newKemVydanPassport">Кем выдан:</label>
-              <input v-model="newKemVydanPassport" id="newKemVydanPassport" />
-  
-              <label for="newDataPassport">Дата выдачи:</label>
-              <input v-model="newDataPassport" type="date" id="newDataPassport" />
-  
-              <label for="newKodPassport">Код подразделения:</label>
-              <input v-model="newKodPassport" id="newKodPassport" />
-  
-              <h2>Водительское удостоверение</h2>
-  
-              <label for="newNumberPrava">Номер:</label>
-              <input v-model="newNumberPrava" id="newNumberPrava" />
-  
-              <label for="newDataPrava">Дата выдачи:</label>
-              <input v-model="newDataPrava" type="date" id="newDataPrava" />
-  
-  
-  
-  
-              <h2>Тур </h2>
-              <label for="tourSelect">Выберите тур:</label>
-              <select id="tourSelect" @change="fetchTours">
-                <option v-for="(tour, index) in tours" :key="index" :value="tour.id">{{ tour.tour_name }}</option>
-              </select>
-  
-              <select v-model="selectedTourDate" id="dataSelect" v-if="tourDates.length > 0">
-                <option v-for="(tour_date, index) in tourDates" :key="index" :value="tour_date">{{ tour_date }}</option>
-              </select>
-  
-              <label for="newPrice">Цена:</label>
-              <input v-model="newPrice" type="number" id="newPrice" />
-              <label for="newDoplata">Доплата:</label>
-              <input v-model="newDoplata" type="number" id="newDoplata" />
-              <label for="newAllPrice">Общая сумма:</label>
-              <input v-model="newAllPrice" type="number" id="newAllSumma" />
-  
-              <label for="newAvance">Аванс:</label>
-              <input v-model="newAvance" type="number" id="newAvance" />
-  
-              <h2>Арендная техника</h2>
-              <select id="tourSelect" v-model="selectedMoto" v-if="motos" @change="updatePrice">
-                <option v-for="(moto, index) in motos" :key="index" :value="moto?.equipment_name">
-                  {{ moto?.equipment_name }} {{ moto?.price }}
-                </option>
-  
-              </select>
-  
-  
-              <input type="text" v-model="selectedMotoPrice" />
-  
-              <label for="newDay">Количество дней:</label>
-              <input type="number" v-model="newDay" id="newDay" />
-  
-              <label for="newRental_cost">К оплате:</label>
-              <input type="number" v-model="newRental_cost" id="newRental_cost" />
-              <label for="newTotal_rental_cost">Общая сумма:</label>
-              <input type="number" v-model="newTotal_rental_cost" id="newTotal_rental_cost" />
-  
-              <h2>коментариии</h2>
-              <textarea name="" v-model="newDescription" id="" cols="100" rows="10"></textarea>
-              <br>
-              <button type="submit">Добавить в базу пользователя </button>
-            </form>
-          </template>
+          <p v-if="userDetails[0]?.user">Данные пользователя: {{ userDetails[0]?.user?.fio }}</p>
+          <p v-if="userDetails[0]?.user">Дата рождения: {{ userDetails[0]?.user?.DateBirth }}</p>
+          <p v-if="userDetails[0]?.user">Номер телефона: {{ userDetails[0]?.user?.phone }}</p>
         </div>
+        <!-- Ваш контент модального окна -->
+
+
+        <div v-for="(item, index) in userDetails" :key="index">
+          <h2> {{ item.tourDate?.tour?.tour_name }}</h2>
+          <table>
+            <thead>
+              <tr>
+
+                <th>Дата</th>
+                <th>До </th>
+                <th>Цена тура</th>
+                <th>Аванс</th>
+                <th>Доплата</th>
+                <th>Арендная техника</th>
+                <th>Кол-во дней аренды</th>
+                <th>Цена аренды</th>
+                <th>Договор на тур</th>
+                <th>Договор на аренду</th>
+                <th>Гостиница</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+
+                <td>{{ item.tourDate?.tour_date }} </td>
+                <td>{{item.tourDate?.tour_date_end  }}</td>
+                <td>{{ item.tourDate?.tour_price }}</td>
+                <td>{{ item.tourDate?.advance }}</td>
+                <td>{{ item.tourDate?.additional_payment }}</td>
+                <td>{{ item.moto?.equipment_name }}</td>
+                <td>{{ item.rental_days }}</td>
+                <td>{{ item.rental_price }}</td>
+                <td>{{ item.tourDate?.tour_contract }}</td>
+                <td>{{ item.tourDate?.rental_contract }}</td>
+                <td>
+                  <span v-if="item.tourDate?.is_busy">Забронировано</span>
+                  <span v-else>Не забронировано</span>
+                </td>
+              </tr>
+              <!-- и так далее, извлекайте нужные данные как вам необходимо -->
+            </tbody>
+          </table>
+        </div>
+        <button @click="hideModal">Закрыть</button>
       </div>
     </div>
-  </template>
-  
-  <script>
-  import axios from 'axios';
-  
-  export default {
-    data() {
-      return {
-        apiUrl: 'http://localhost:3000',
-        people: [],
-        searchText: '',
-        matchingPeople: [],
-        searchResults: [],
-        newFio: '',
-        newPhone: '',
-        newbirthDate: '',
-        selected: '',
-        selectedPerson: null,
-        tours: [],
-        tours1: '',
-        selectedTourDate: null,
-        tourDates: [],
-        tourSelect: '',
-        dataSelect: '',
-        selectedTour: null,
-        tourId: null,
-        selectedOption: null,
-        selectedValue2: null,
-        options1: [
-  
-        ],
-        selectedMotoPrice: 0,
-        selectedOptionMoto: null,
-        newPrice: 0,
-        newDoplata: 0,
-        newAllPrice: 0,
-        newAvance: 0,
-        motos: [],    // все данные которые используем 
-  
+
+
+
+    <div class="tour-menu bike">
+
+      <!-- Список клиентов слева -->
+
+
+
+
+
+
+      <h2>Список клиентов</h2>
+      <input type="text" v-model="searchQuery" placeholder="Поиск по клиентам" />
+      <table>
+        <thead>
+          <tr>
+            <th>№</th>
+            <th>ФИО</th>
+            <th>Телефон</th>
+            <th>Дата рождения</th>
+            <th>Серия паспорта</th>
+            <th>Номер паспорта</th>
+            <th>Кем выдан паспорт</th>
+            <th>Дата выдачи паспорта</th>
+            <th>Код подразделения</th>
+            <th>Водительское удостоверение</th>
+            <th>Дата выдачи водительского удостоверения</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr v-for="(user, index) in filteredUsers" :key="index" @click="showTourDates(index)">
+            <td>{{ index + 1 }}</td>
+            <td>
+              <template v-if="!user.isEditing">{{ user.fio }}</template>
+              <template v-else>
+                <input type="text" v-model="user.fioEdit" />
+              </template>
+            </td>
+            <td>
+              <template v-if="!user.isEditing">{{ user.phone }}</template>
+              <template v-else>
+                <input type="text" v-model="user.phoneEdit" />
+              </template>
+            </td>
+            <td>
+              <template v-if="!user.isEditing">{{ user.DateBirth }}</template>
+              <template v-else>
+                <input type="date" v-model="user.DateBirthEdit" />
+              </template>
+            </td>
+
+            <td>
+              <template v-if="!user.isEditing">{{ user.passportSeries }}</template>
+              <template v-else>
+                <input type="text" v-model="user.passportSeriesEdit" />
+              </template>
+            </td>
+            <td>
+              <template v-if="!user.isEditing">{{ user.passportNumber }}</template>
+              <template v-else>
+                <input type="text" v-model="user.passportNumberEdit" />
+              </template>
+            </td>
+            <td>
+              <template v-if="!user.isEditing">{{ user.passportKemVydan }}</template>
+              <template v-else>
+                <input type="text" v-model="user.passportKemVydanEdit" />
+              </template>
+            </td>
+            <td>
+              <template v-if="!user.isEditing">{{ user.passportVydan }}</template>
+              <template v-else>
+                <input type="date" v-model="user.passportVydanEdit" />
+              </template>
+            </td>
+
+
+            <td>
+              <template v-if="!user.isEditing">{{ user.passportKodP }}</template>
+              <template v-else>
+                <input type="text" v-model="user.passportKodPEdit" />
+              </template>
+            </td>
+            <td>
+              <template v-if="!user.isEditing">{{ user.driverLicense }}</template>
+              <template v-else>
+                <input type="text" v-model="user.driverLicenseEdit" />
+              </template>
+            </td>
+            <td>
+              <template v-if="!user.isEditing">{{ user.driverLicenseDate }}</template>
+              <template v-else>
+                <input type="date" v-model="user.driverLicenseDateEdit" />
+              </template>
+            </td>
+            <!-- Add similar blocks for other fields -->
+            <td>
+              <button v-if="!user.isEditing" @click="editTour(index)">
+                <i class="fas fa-edit"></i> 
+              </button>
+              <button v-else @click="saveTour(index)">
+                <i class="fas fa-save"></i> Сохранить
+              </button>
+              <button @click="deleteMoto(index)">
+                <i class="fas fa-trash-alt"></i> 
+              </button>
+              <button @click="showUserDetails(index)">
+                <i class="fas fa-eye"></i> 
+              </button>
+
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+
+    </div>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+import '@fortawesome/fontawesome-free/css/all.css';
+export default {
+
+  data() {
+    return {
+      apiUrl: 'http://localhost:3000',
+      selectedTour: null,
+      editIndex: null,
+      users: [],
+      searchQuery: '', // New property for search
+      selectedUserDetails: null,
+      userDetails: null,
+      // modalShow: false,
+      isDetailsVisible: false,
+
+      isModalVisible: false,
+
+    };
+  },
+  created() {
+    this.fetchTours();
+  },
+  computed: {
+    filteredUsers() {
+      const query = this.searchQuery.toLowerCase();
+      return this.users.filter(user =>
+        user.fio.toLowerCase().includes(query) ||
+        user.phone.includes(query) ||
+        user.DateBirth.includes(query)
+        // ... add other fields as needed for search
+      );
+
+    },
+  },
+  methods: {
+    showModal() {
+      this.isModalVisible = true;
+    },
+    hideModal() {
+      this.isModalVisible = false;
+    },
+    toggleDetailsVisibility() {
+      this.isDetailsVisible = !this.isDetailsVisible;
+    },
+    showTourDates(index) {
+      if (this.selectedTour === index) {
+        this.selectedTour = null;
+      } else {
+        this.selectedTour = index;
+        this.editIndex = null; // Сбрасываем индекс редактирования
+      }
+    },
+
+    async fetchUserDetails(userId) {
+      try {
+        const response = await axios.get(`${this.apiUrl}/arenda-status/${userId}`);
+
+        console.log('User Details Response:', response);
+        this.selectedUserDetails = response.data;
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    },
+    async showUserDetails(userId) {
+      try {
+        const response = await axios.get(`${this.apiUrl}/arenda-status/users/${userId}`);
+        console.log('User Details Response:', response);
+        this.userDetails = response.data || {}; // Убедитесь, что userDetails всегда определен
+        // Откройте модальное окно
+        this.showModal();
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+        console.log('Error Details:', error.response);
+      }
+    },
+
+
+    // показ всей техники
+    async fetchTours() {
+      try {
+        const response = await axios.get(`${this.apiUrl}/users`);
+        console.log('API Response:', response);
+        console.log('API Data:', response.data);
+
+        this.users = response.data.map(user => {
+          return {
+            id: user.id,
+            fio: user.fio.trim(),
+            phone: user.phone,
+            DateBirth: user.DateBirth,
+            passportSeries: user.passportSeries,
+            passportNumber: user.passportNumber,
+            passportKemVydan: user.passportKemVydan,
+            passportVydan: user.passportVydan,
+            passportKodP: user.passportKodP,
+            driverLicense: user.driverLicense,
+            driverLicenseDate: user.driverLicenseDate,
+
+          };
+        });
+        // Log names of all motos
+        this.users.forEach(user => {
+          console.log(user.id);
+        });
+      } catch (error) {
+        console.error('Error fetching motos:', error);
+      }
+    },
+    async deleteMoto(index) {
+      try {
+        const confirmation = confirm('Вы уверены, что хотите удалить этот мотоцикл');
+        if (confirmation) {
+          const userId = this.users[index].id;
+
+          try {
+            await axios.delete(`${this.apiUrl}/users/${userId}`);
+            console.log(`${this.apiUrl}/users/${userId}`);
+            this.users.splice(index, 1); // Remove the deleted moto directly
+            this.selectedTour = null;
+          } catch (error) {
+            console.error('Error deleting moto:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error handling delete confirmation:', error);
+      }
+    },
+    editTour(index) {
+      // Set editing state to true for the clicked user
+      this.users[index].isEditing = true;
+      this.users[index].fioEdit = this.users[index].fio;
+      this.users[index].phoneEdit = this.users[index].phone;
+      this.users[index].DateBirthEdit = this.users[index].DateBirth;
+      this.users[index].passportSeriesEdit = this.users[index].passportSeries;
+      this.users[index].passportNumberEdit = this.users[index].passportNumber;
+      this.users[index].passportKemVydanEdit = this.users[index].passportKemVydan;
+      this.users[index].passportVydanEdit = this.users[index].passportVydan;
+      this.users[index].passportKodPEdit = this.users[index].passportKodP;
+      this.users[index].driverLicenseEdit = this.users[index].driverLicense;
+      this.users[index].driverLicenseDateEdit = this.users[index].driverLicenseDate;
+      // Add other fields here
+    },
+    updateTour(index) {
+      const userId = this.users[index].id;
+      const updatedUser = {
+        fio: this.users[index].fio,
+        phone: this.users[index].phone,
+        DateBirth: this.users[index].DateBirth,
+        passportSeries: this.users[index].passportSeries,
+        passportNumber: this.users[index].passportNumber,
+        passportKemVydan: this.users[index].passportKemVydan,
+        passportVydan: this.users[index].passportVydan,
+        passportKodP: this.users[index].passportKodP,
+        driverLicense: this.users[index].driverLicense,
+        driverLicenseDate: this.users[index].driverLicenseDate,
+        // ... (добавьте другие поля, если необходимо)
       };
+
+      axios.put(`${this.apiUrl}/users/${userId}`, updatedUser)
+        .then(response => {
+          console.log('User updated successfully:', response.data);
+        })
+        .catch(error => {
+          console.error('Error updating user:', error);
+        });
     },
-    async mounted() {
-      await this.fetchTours();
-      this.fetchBikes(); // вызываем fetchTours при монтировании компонента
+    // ... (ваш код) ...
+    saveTour(index) {
+      this.updateTour(index);
+
+      // Save the changes and set editing state back to false
+      this.users[index].isEditing = false;
+      this.users[index].fio = this.users[index].fioEdit;
+      this.users[index].phone = this.users[index].phoneEdit;
+      this.users[index].DateBirth = this.users[index].DateBirthEdit;
+      this.users[index].passportSeries = this.users[index].passportSeriesEdit;
+      this.users[index].passportNumber = this.users[index].passportNumberEdit;
+      this.users[index].passportKemVydan = this.users[index].passportKemVydanEdit;
+      this.users[index].passportVydan = this.users[index].passportVydanEdit;
+      this.users[index].passportKodP = this.users[index].passportKodPEdit;
+      this.users[index].driverLicense = this.users[index].driverLicenseEdit;
+      this.users[index].driverLicenseDate = this.users[index].driverLicenseDateEdit;
+      // ... (добавьте другие поля, если необходимо)
+
+      // Clear the editing properties after saving
+      this.users[index].fioEdit = '';
+      this.users[index].phoneEdit = '';
+      this.users[index].DateBirthEdit = '';
+      // ... (очистите другие свойства редактирования, если необходимо)
     },
-    computed: {
-  
-  
-      // Вычисляемая сумма
-      totalSum: function () {
-        return parseFloat(this.newPrice);
-      },
-      // Вычисляемый аванс (30% от суммы)
-      advance: function () {
-        return this.totalSum * 0.3;
-      },
-    },
-    watch: {
-      // Следим за изменениями totalSum и advance и обновляем поля ввода
-      totalSum: function (newValue) {
-        this.newAllPrice = newValue;
-      },
-      advance: function (newValue) {
-        this.newAvance = newValue;
-      },
-    },
-    methods: {
-      handleMotoChange() {
-        const selectedMoto = this.selectedMoto;
-        if (selectedMoto && typeof selectedMoto.price !== 'undefined') {
-          this.selectedMotoPrice = parseFloat(selectedMoto.price) || 0;
-          console.log('блабббал', this.selectedMotoPrice)
-        } else {
-          this.selectedMotoPrice = 0;
-        }
-      },
-  
-      updatePrice() {
-        if (this.selectedMoto && typeof this.selectedMoto.price !== 'undefined') {
-          this.selectedMotoPrice = parseFloat(this.selectedMoto.price) || 0;
-        } else {
-          this.selectedMotoPrice = 0;
-        }
-      },
-      // отправка данных в первое значение
-  
-      async addPerson(personId) {
-        try {
-  
-          console.log(personId)
-          // Получаем выбранный элемент напрямую из модели данных Vue.js
-          const selectedOption = this.selectedTourDate;
-          // Выводим выбранный элемент в консоль
-          console.log('Selected Option:', selectedOption);
-          const response4 = await axios.get(`${this.apiUrl}/tour-dates/${this.selectedOption}`);
-  
-          const selectResponseData = response4.data
-          console.log('вывод цифры', selectResponseData)
-  
-          // мотик
-  
-          const selectedOptionMoto = this.selectedMoto; // замените на this.selectedMoto
-          console.log("мотик", selectedOptionMoto);
-  
-          const response5 = await axios.get(`${this.apiUrl}/moto/name/${encodeURIComponent(selectedOptionMoto)}`);
-          console.log("response5", response5);
-  
-          const mototest = response5.data;
-          // выбор тура 
-          const dataToSendBikeArenda = {
-            user: personId,
-            rental_days: this.newDay,
-            description: this.newDescription,
-            rental_cost: this.newRental_cost,
-            total_rental_cost: this.newTotal_rental_cost,
-  
-            moto: mototest,
-            rental_tour: this.newPrice,
-            total_tour: this.newAllPrice,
-            doplata_tour: this.newAvance,
-  
-            tourDate: selectResponseData,
-  
-            // "status_id": 2
-  
-          };
-          console.log('вывод user', dataToSendBikeArenda)
-  
-          const response2 = await axios.post('http://localhost:3000/arenda-status', dataToSendBikeArenda)
-          console.log(response2)
-  
-  
-  
-        } catch (error) {
-          console.error('Ошибка отправки данных:', error);
-  
-          if (error.response) {
-            // The request was made and the server responded with a status code
-            console.error('Response status:', error.response.status);
-            console.error('Response data:', error.response.data);
-          } else if (error.request) {
-            // The request was made but no response was received
-            console.error('No response received:', error.request);
-          } else {
-            // Something happened in setting up the request that triggered an Error
-            console.error('Error setting up the request:', error.message);
-          }
-  
-          alert('Произошла ошибка при отправке данных. Пожалуйста, попробуйте снова.');
-        }
-      },
-  
-  
-  
-      // отправка ко второе значение
-      async newaddPerson() {
-        try {
-  
-          // Формируем объект с данными для отправки на сервер
-          const dataToSend = {
-            fio: this.newFio,
-            DateBirth: this.newDateBirth,
-            phone: this.newPhone,
-            // driverLicenseDate:this.newNumberPrava,
-            passportSeries: this.newSeriaPassport,
-            passportNumber: this.newNumberPassport,
-            passportKemVydan: this.newKemVydanPassport,
-            passportVydan: this.newDataPassport,
-            passportKodP: this.newKodPassport,
-  
-  
-            driverLicense: this.newNumberPrava,
-            driverLicenseDate: this.newDataPrava,
-  
-          }
-  
-  
-          // Отправляем данные на сервер
-          const response = await axios.post('http://localhost:3000/users', dataToSend);
-  
-  
-          // Получаем выбранный элемент напрямую из модели данных Vue.js
-          const selectedOption = this.selectedTourDate;
-  
-  
-          // Выводим выбранный элемент в консоль
-          console.log('Selected Option:', selectedOption);
-          const response4 = await axios.get(`${this.apiUrl}/tour-dates/${this.selectedOption}`);
-  
-          const selectResponseData = response4.data
-          console.log('вывод цифры', selectResponseData)
-  
-          // мотик
-  
-          const selectedOptionMoto = this.selectedMoto; // замените на this.selectedMoto
-          console.log("мотик", selectedOptionMoto);
-  
-          const response5 = await axios.get(`${this.apiUrl}/moto/name/${encodeURIComponent(selectedOptionMoto)}`);
-          console.log("response5", response5);
-  
-          console.log('мотик', response5.data);
-          // http://localhost:3000/moto/name/
-  
-          // id
-          const userId = response.data.id;
-          // мотик
-          // const motoId1 = response5.data
-          console.log('ID созданного пользователя:', userId);
-          const mototest = response5.data;
-          // выбор тура 
-  
-  
-          const dataToSendBikeArenda = {
-            user: userId,
-            rental_days: this.newDay,
-            description: this.newDescription,
-            rental_cost: this.newRental_cost,
-            total_rental_cost: this.newTotal_rental_cost,
-  
-            moto: mototest,
-            rental_tour: this.newPrice,
-            total_tour: this.newAllPrice,
-            doplata_tour: this.newAvance,
-  
-            tourDate: selectResponseData,
-  
-            // "status_id": 2
-  
-          };
-          console.log('вывод user', dataToSendBikeArenda)
-  
-          const response2 = await axios.post('http://localhost:3000/arenda-status', dataToSendBikeArenda)
-          console.log(response2)
-  
-  
-          alert('Данные успешно отправлены на сервер!');
-        } catch (error) {
-          console.error('Ошибка отправки данных:', error);
-          alert('Произошла ошибка при отправке данных. Пожалуйста, попробуйте снова.');
-        }
-      },
-  
-      async searchOrAdd() {
-        try {
-          if (!this.searchText.trim()) {
-            // Если строка поиска пуста или состоит только из пробелов, выполнить сброс
-            this.selectedPerson = null;
-            this.searchResults = [];
-            return;
-          }
-  
-          const response = await axios.get(`http://localhost:3000/users/fio/${encodeURIComponent(this.searchText)}`);
-  
-          this.matchingPeople = response.data;
-  
-          if (this.matchingPeople.length !== 0) {
-            // Если найдены совпадения, выбрать первого в списке
-            this.selectedPerson = this.matchingPeople[0];
-            console.log('ID выбранного человека:', this.selectedPerson.id);
-            this.searchResults = this.matchingPeople;
-  
-            console.log();
-          } else {
-            console.log('сброс');
-            // Если совпадений не найдено, очистить результаты
-            this.selectedPerson = null;
-            this.searchResults = [];
-          }
-        } catch (error) {
-          console.error('Error fetching data from the API:', error);
-        }
-      },
-  
-      async handleFormSubmit() {
-        try {
-          if (this.selectedPerson) {
-            // Тут можно добавить логику отправки данных, например, вызов метода addPerson
-            this.addPerson(this.selectedPerson.id);
-            alert('Данные успешно отправлены на сервер!');
-          } else {
-            alert('Сначала выберите человека из списка!');
-          }
-        } catch (error) {
-          console.error('Error handling form submission:', error);
-          alert('Произошла ошибка при отправке данных. Пожалуйста, попробуйте снова.');
-        }
-      },
-  
-  
-  
-      async fetchTours() {
-        try {
-  
-          const response = await axios.get('http://localhost:3000/tours');
-          this.tours = response.data;
-          console.log('Тур апи:', this.tours);
-  
-          // Вызываем fetchDataTours сразу после получения списка туров
-          this.fetchDataTours();
-  
-          var selectElement = document.getElementById("tourSelect");
-          var isHandlingEvent = false;
-  
-          selectElement.addEventListener('change', async () => {
-            if (isHandlingEvent) {
-              return;
-            }
-  
-            isHandlingEvent = true;
-            var selectedValue = selectElement.value;
-  
-            const response1 = await axios.get(`${this.apiUrl}/tours/name-tour/${selectedValue}`);
-            this.tourId = response1.data.tour_id;
-  
-            console.log('Выбранное значение:', selectedValue);
-            console.log('Ответ от сервера:', this.tourId);
-  
-            this.fetchDataTours();
-  
-            isHandlingEvent = false;
-          });
-        } catch (error) {
-          console.error('Error fetching tours:', error);
-        }
-      },
-  
-  
-      async fetchDataTours() {
-        try {
-          const response3 = await axios.get(`${this.apiUrl}/tour-dates/${this.tourId}/tour-date`);
-          this.tourDates = response3.data.map(item => item.tour_date);
-          console.log('tour_dates:', this.tourDates);
-  
-          // http://localhost:3000/tour-dates/переменная
-  
-  
-          // alert(`Selected Option Index: ${selectedIndex}`);
-  
-  
-  
-        } catch (error) {
-          console.error('Error fetching tour dates:', error);
-        }
-      },
-      async fetchBikes() {
-        try {
-          const response = await axios.get(`${this.apiUrl}/moto`);
-          this.motos = response.data;
-          console.log('Motos Array:', this.motos);
-          this.motos.forEach((moto, index) => {
-            console.log(`Moto at index ${index}:`, moto);
-          });
-        } catch (error) {
-          console.error('Error fetching motos:', error);
-        }
-      },
-  
-    },
-  
-  };
-  
-  </script>
-  
-  <style>
-  form {
-    margin-bottom: 20px;
-  }
-  
-  select {
-    margin-left: 10px;
-  }
-  
-  button {
-    margin-top: 10px;
-  }
-  
-  h2 {
-    margin-top: 20px;
-  }
-  </style>
-  
+
+
+
+
+  },
+};
+</script>
+
+<style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  /* Полупрозрачный фон */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  position: relative;
+  background-color: white;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 80vw;
+  height: 80vh;
+  /* Set a maximum height for the modal content */
+  overflow: auto;
+  /* Enable vertical scrolling */
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  font-size: 20px;
+  color: #333;
+}
+
+/* Общие стили */
+.all {
+  display: flex;
+  max-width: 100%;
+  justify-content: space-between;
+  flex-direction: column;
+}
+
+/* Стили для таблицы с деталями пользователя и датами тура */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+width: auto;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+/* Стили для кнопок редактирования и удаления в таблице */
+.edit-button,
+.delete-button {
+  padding: 10px;
+  margin: 5px;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.edit-button:hover,
+.delete-button:hover {
+  background-color: #2980b9;
+}
+
+.edit-button i,
+.delete-button i {
+  margin-right: 5px;
+}
+
+/* Стили для списка клиентов и поискового поля */
+.tour-menu.bike {
+  padding-left: 20px;
+}
+
+input{
+  min-width: 150px;
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+/* Стили для таблицы клиентов */
+.tour-menu table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.tour-menu th,
+.tour-menu td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.tour-menu th {
+  background-color: #f2f2f2;
+}
+
+/* Стили для кнопок в таблице клиентов */
+.tour-menu button {
+  padding: 8px;
+  margin: 5px;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.tour-menu button:hover {
+  background-color: #2980b9;
+}
+
+.tour-menu button i {
+  margin-right: 5px;
+}</style>
